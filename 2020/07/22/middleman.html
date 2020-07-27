@@ -1,0 +1,98 @@
+<!doctype html> <html> <head> <meta charset=utf-8 /> <meta http-equiv=X-UA-Compatible content='ie=edge'/> <meta name=viewport content="width=device-width, initial-scale=1, shrink-to-fit=no"/> <title>Blog Title - middlemanとgithubの連携</title> <link rel=alternate type="application/atom+xml" title="Atom Feed" href="/feed.xml"/> <link href="/note/assets/stylesheets/app-524c795c.css" rel=stylesheet /> <script src="/note/assets/javascripts/app-eaf002be.js"></script> </head> <body> <div id=main role=main> <nav class="navbar navbar-expand-lg navbar-light bg-light"> <a class=navbar-brand href="/note/">タイトル</a> <button class=navbar-toggler type=button data-toggle=collapse data-target="#navbarNav" aria-controls=navbarNav aria-expanded=false aria-label="Toggle navigation"> <span class=navbar-toggler-icon></span> </button> <div class="collapse navbar-collapse" id=navbarNav> <ul class=navbar-nav> <li class=nav-item> <a class="nav-link active" href="/note/">トップページ</a> </li> <li class=nav-item> <a class=nav-link href="/note/note.html">技術ノート</a> </li> </ul> </div> </nav> <div class="container article-outside-container"> <div class=row> <div class="col-md-8 blog-main"> <h3> middlemanとgithubの連携 </h3> <hr> <h1>middlemanとgithubの連携</h1> <h2>連携参考URL</h2> <p><a href="https://zacky1972.github.io/tech/2017/11/04/middleman.html">https://zacky1972.github.io/tech/2017/11/04/middleman.html</a></p> <h2>middlemanのインストール</h2> <p>manabu@jacquard|2020-07-20|22:46:27|/home/manabu/Desktop/development|</p> <p>% gem install middleman</p> <pre><code>Successfully installed middleman-4.3.7
+Parsing documentation for middleman-4.3.7
+Done installing documentation for middleman after 0 seconds
+1 gem installed
+</code></pre> <p>% bundle exec middleman version</p> <pre><code>Deprecation warning: Expected string default value for &#39;--instrument&#39;; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+Middleman 4.3.7
+</code></pre> <p>% middleman init tanaka_blog</p> <p>% cd tanaka_blog</p> <p>manabu@jacquard|2020-07-20|22:49:02|/home/manabu/Desktop/development/tanaka_blog|</p> <p>% git init</p> <pre><code>Initialized empty Git repository in /home/manabu/Desktop/development/tanaka_blog/.git/
+</code></pre> <p>% git remote add origin リモート先</p> <p>% git remote add origin <a href="https://github.com/xuejoule/tanaka_blog.git">https://github.com/xuejoule/tanaka_blog.git</a></p> <h2>ディレクトリの内容を add/commit/push する</h2> <p>$ git add -A</p> <p>$ git commit -m &quot;initial commit&quot;</p> <p>$ git push -f origin master</p> <h2>サーバ起動</h2> <p>% bundle exec middleman server</p> <p>ブラウザlocalhost:4567</p> <p>manabu@jacquard|2020-07-20|22:53:59|/home/manabu/Desktop/development/tanaka_blog|</p> <p>% vi Gemfile</p> <p>manabu@jacquard|2020-07-20|22:53:59|/home/manabu/Desktop/development/tanaka_blog|</p> <p>% cat Gemfile</p> <p>gem &#39;middleman-blog&#39;, &#39;~&gt; 4.0&#39;</p> <p>manabu@jacquard|2020-07-20|22:54:15|/home/manabu/Desktop/development/tanaka_blog|</p> <p>% bundle install</p> <h2>config.rb に記述</h2> <pre><code>activate :blog do |blog|
+  ブログ機能のオプションを設定
+  blog.sources = &quot;{year}-{month}-{day}-{title}.html&quot;
+  blog.permalink = &quot;{year}/{month}/{day}/{title}.html&quot;
+  blog.default_extension = &quot;.md&quot;
+end
+</code></pre> <pre><code>helpers do
+  def hostUrl link
+    link
+  end
+end
+※ hostUrl ヘルパーは後で使うフックとして用意しておきます。
+</code></pre> <p>source/index.html.erb に記述</p> <h2>GitHub Flavored Markdown の導入</h2> <p>Gemfile に下記を追加</p> <p>gem &#39;redcarpet&#39;</p> <p>gem &#39;nokogiri&#39;</p> <p>下記のコマンドを実行します。</p> <p>% bundle install</p> <h2>config.rb に下記を追加</h2> <pre><code> # GitHub Flavored Markdown
+set :markdown, :tables =&gt; true, :autolink =&gt; true, :gh_blockcode =&gt; true, :fenced_code_blocks =&gt; true
+set :markdown_engine, :redcarpet
+</code></pre> <h2>GitHub Pages にデプロイ</h2> <p>gem &#39;middleman-deploy&#39;, &#39;~&gt; 2.0.0.pre.alpha&#39;</p> <p>% bundle install</p> <h2>config.rb に書いた hosturl を次のように変更</h2> <pre><code>helpers do
+  def host_url(link)
+    &#39;https://(ユーザー名).github.io&#39; + link =&gt; &#39;https://xuejoule.github/tanaka_blog.io&#39; + link
+    &#39;http://localhost:4567&#39; + link
+  end
+end
+</code></pre> <h2>config.rb に下記の記述を追加</h2> <pre><code> Build-specific configuration
+configure :build do
+   Minify CSS on build
+   activate :minify_css
+
+   Minify Javascript on build
+   activate :minify_javascript
+   リポジトリ名を host に設定しておく
+   こうすることで stylesheet_link_tag などで展開されるパスが
+   https://(ユーザー名).github.io/(リポジトリ名)/stylesheets/*.css
+   のようになる
+  activate :asset_hash
+  activate :asset_host, :host =&gt; &#39;https://(ユーザー名).github.io&#39;=&gt;&#39;https://xuejoule.github.io&#39;
+end
+</code></pre> <h2>デプロイの設定</h2> <p>今回は gh-pages を使用するので branch に &#39;gh-pages&#39; を設定</p> <pre><code>activate :deploy do |deploy|
+  deploy.build_before = true
+  deploy.deploy_method = :git
+  deploy.branch = &#39;gh-pages&#39;
+end
+</code></pre> <h2>以上の準備が終わったところで，次のコマンドを実行すると，GitHub Pages にデプロイされる</h2> <p>manabu@jacquard|2020-07-20|23:34:00|/home/manabu/Desktop/development/tanaka_blog|</p> <p>% bundle exec middleman deploy</p> <pre><code>Deprecation warning: Expected string default value for &#39;--instrument&#39;; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+== Blog Sources: {year}-{month}-{day}-{title}.html (:prefix + :sources)
+         run  middleman build -e production from &quot;.&quot;
+Deprecation warning: Expected string default value for &#39;--instrument&#39;; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+ Blog Sources: {year}-{month}-{day}-{title}.html (:prefix + :sources)
+      create  build/stylesheets/site-a77c873c.css
+      create  build/images/.keep
+      create  build/javascripts/site-954757c2.js
+      create  build/index.html
+Project built successfully.
+Deploying via git to remote=&quot;origin&quot; and branch=&quot;gh-pages&quot;
+Cant deploy! Please add a remote with the name &#39;origin&#39; to your repo.
+</code></pre> <p>デプロイ失敗</p> <p>% bundle exec middleman deploy</p> <pre><code>Deprecation warning: Expected string default value for &#39;--instrument&#39;; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+== Blog Sources: {year}-{month}-{day}-{title}.html (:prefix + :sources)
+         run  middleman build -e production from &quot;.&quot;
+Deprecation warning: Expected string default value for &#39;--instrument&#39;; got false (boolean).
+This will be rejected in the future unless you explicitly pass the options `check_default_type: false` or call `allow_incompatible_default_type!` in your code
+You can silence deprecations warning by setting the environment variable THOR_SILENCE_DEPRECATION.
+== Blog Sources: {year}-{month}-{day}-{title}.html (:prefix + :sources)
+   identical  build/stylesheets/site-a77c873c.css
+   identical  build/images/.keep
+   identical  build/javascripts/site-954757c2.js
+   identical  build/index.html
+pProject built successfully.
+ Deploying via git to remote=&quot;origin&quot; and branch=&quot;gh-pages&quot;
+Already on &#39;gh-pages&#39;
+[gh-pages fb16df1] Automated commit at 2020-07-21 01:06:00 UTC by middleman-deploy 2.0.0-alpha
+Username for &#39;https://github.com&#39;: xuejoule
+Password for &#39;https://xuejoule@github.com&#39;: 
+Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (10/10), 1.63 KiB | 555.00 KiB/s, done.
+Total 10 (delta 1), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (1/1), done.
+remote: 
+remote: Create a pull request for &#39;gh-pages&#39; on GitHub by visiting:
+remote:      https://github.com/xuejoule/tanaka_blog/pull/new/gh-pages
+remote: 
+To https://github.com/xuejoule/tanaka_blog.git
+ * [new branch]      gh-pages -&gt; gh-pages
+</code></pre> <h2>githab pages</h2> <p>デプロイしてから10分程度待った後に， https://(ユーザー名).github.io/(リポジトリ名) にアクセスするとサイトが起動</p> <p><a href="https://xuejoule.github.io/tanaka_blog/">https://xuejoule.github.io/tanaka_blog/</a></p> </div> <aside class="col-md-4 blog-sidebar"> <div class="p-3 mb-3 bg-light rounded"> <h4 class=font-italic>技術メモ</h4> <p class=mb-0> 日々学んだことを技術メモとして残していこうと思っています。 </p> </div> <div class=p-3> <h4 class=font-italic>最新投稿</h4> <ol class=list-unstyled> <li> <span>2020/07/26</span> <a href="/note/2020/07/26/rspec.html">rspec</a> </li> <li> <span>2020/07/25</span> <a href="/note/2020/07/25/expression.html">正規表現</a> </li> <li> <span>2020/07/24</span> <a href="/note/2020/07/24/kankyou.html">環境変数について</a> </li> <li> <span>2020/07/23</span> <a href="/note/2020/07/23/syashin.html">写真を添付テスト</a> </li> <li> <span>2020/07/22</span> <a href="/note/2020/07/22/middleman.html">middlemanとgithubの連携</a> </li> </ol> </div> <div class=p-3> <h4 class=font-italic>タグ</h4> <ol class=list-unstyled> </ol> </div> <div class=p-3> <h4 class=font-italic>年別</h4> <ol class=list-unstyled> <li> <a href="/note/2020.html">2020 (5)</a> </li> </ol> </div> </aside> </div> </div> <footer class=my-footer> <p></p> </footer> </div> </body> </html>
